@@ -1,0 +1,5 @@
+- Titel: 
+- Autor: 
+- Dialekt: 
+- Quelle: original/<datei>.epub
+- Status: Kapitel 0 übersetzt

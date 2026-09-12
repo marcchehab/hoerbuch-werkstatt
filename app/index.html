@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hörbuch-Werkstatt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#f6f4ef; --panel:#fdfcf9; --ink:#1d2321; --ink-2:#5a625f; --ink-3:#9aa39f;
+  --rule:#dcdad2; --accent:#0f766e; --accent-ink:#ffffff; --accent-soft:#d9efeb;
+  --warn:#b7791f; --warn-soft:#fbefd4; --rec:#2f7d4f; --rec-soft:#e4f1e7; --live:#c0392b; --live-soft:#f9e0dc;
+  --serif:"Fraunces",Georgia,serif; --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --fs:1.05rem;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#16191a; --panel:#1e2324; --ink:#ebe9e2; --ink-2:#aeb5b1; --ink-3:#6f7874;
+  --rule:#2e3536; --accent:#3cbfb0; --accent-ink:#0d1a18; --accent-soft:#1c3a37;
+  --warn:#e0a83d; --warn-soft:#3a2f16; --rec:#5cc082; --rec-soft:#1b2d21; --live:#e4736a; --live-soft:#3d1f1c;
+}}
+:root[data-theme="dark"]{
+  --bg:#16191a; --panel:#1e2324; --ink:#ebe9e2; --ink-2:#aeb5b1; --ink-3:#6f7874;
+  --rule:#2e3536; --accent:#3cbfb0; --accent-ink:#0d1a18; --accent-soft:#1c3a37;
+  --warn:#e0a83d; --warn-soft:#3a2f16; --rec:#5cc082; --rec-soft:#1b2d21; --live:#e4736a; --live-soft:#3d1f1c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:var(--fs);line-height:1.5;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:1px solid var(--rule);border-radius:6px;padding:.3rem .7rem;cursor:pointer;line-height:1.2}
+button:hover{border-color:var(--ink-3)}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.live{background:var(--live);color:#fff;border-color:var(--live)}
+button.mini{padding:.1rem .45rem;font-size:.78rem;border-radius:4px}
+select,input[type=color]{font:inherit;color:inherit;background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:.3rem .5rem}
+input[type=color]{padding:0;width:1.6rem;height:1.6rem;border-radius:50%;cursor:pointer}
+.label{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+kbd{font-family:var(--mono);font-size:.75em;border:1px solid var(--rule);border-radius:4px;padding:0 .3em;background:var(--panel)}
+
+/* header */
+header{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.55rem 1.25rem;border-bottom:1px solid var(--rule);background:var(--panel);flex:none}
+header h1{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:0;letter-spacing:-.01em}
+.spacer{flex:1}
+.progress{display:flex;align-items:center;gap:.6rem;font-variant-numeric:tabular-nums;font-size:.9rem}
+.bar{width:140px;height:8px;border-radius:4px;background:var(--rule);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--rec);width:0}
+.tools{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap}
+.meter{width:90px;height:8px;border-radius:4px;background:var(--rule);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--rec);transition:width .05s linear}
+.meter.hot i{background:var(--live)}
+#recbtn{min-width:8.5rem;font-variant-numeric:tabular-nums}
+#status{font-size:.85rem;color:var(--ink-2);min-width:8rem}
+.mode-static #recbtn,.mode-static #assemble,.mode-static .meter{display:none}
+
+/* layout */
+:root{--nav-w:220px;--aside-w:340px}
+main{flex:1;display:grid;grid-template-columns:var(--nav-w) 6px minmax(0,1fr) 6px var(--aside-w);min-height:0}
+.gutter{cursor:col-resize;background:transparent;border-left:1px solid var(--rule);position:relative}
+.gutter:hover,.gutter.drag{background:var(--accent-soft)}
+body.dragging{cursor:col-resize;user-select:none}
+main.no-nav{grid-template-columns:0 6px minmax(0,1fr) 6px var(--aside-w)} main.no-nav nav{display:none}
+main.no-aside{grid-template-columns:var(--nav-w) 6px minmax(0,1fr) 6px 0} main.no-aside aside{display:none}
+main.no-nav.no-aside{grid-template-columns:0 6px minmax(0,1fr) 6px 0}
+nav,aside{padding:1rem;overflow-y:auto}
+aside{background:var(--panel)}
+section#script{padding:1.25rem 1.25rem 40vh;overflow-y:auto}
+.script-inner{max-width:68ch;margin:0 auto}
+@media (max-width:1000px){
+  body{height:auto;overflow:auto}
+  main,main.no-nav,main.no-aside{grid-template-columns:1fr}
+  .gutter{display:none}
+  nav{border-bottom:1px solid var(--rule)}
+  aside{border-top:1px solid var(--rule)}
+  .bar{width:90px}
+}
+
+/* nav */
+nav h2,aside h2{margin:0 0 .5rem;font-size:.72rem}
+.chapters{list-style:none;margin:0 0 1.5rem;padding:0;display:flex;flex-direction:column;gap:.25rem}
+.chapters button{width:100%;text-align:left;border:0;padding:.45rem .6rem;border-radius:6px;display:grid;gap:.25rem}
+.chapters button.active{background:var(--accent-soft)}
+.chapters .t{display:flex;justify-content:space-between;gap:.5rem}
+.chapters .n{font-family:var(--mono);color:var(--ink-3);font-size:.75rem}
+.chapters .bar{width:100%;height:4px}
+.keys{font-size:.8rem;color:var(--ink-2);display:grid;grid-template-columns:auto 1fr;gap:.25rem .6rem;align-items:baseline}
+
+/* script */
+.chap-head{margin:0 0 1.25rem}
+.chap-head .label{display:block;margin-bottom:.2rem}
+.chap-head h2{font-family:var(--serif);font-size:1.9rem;font-weight:600;margin:0;line-height:1.15;text-wrap:balance}
+.line{display:grid;grid-template-columns:8.5rem minmax(0,1fr);gap:.25rem 1rem;align-items:start;padding:.6rem .75rem;border-radius:8px;border-left:3px solid transparent;cursor:pointer;position:relative}
+.line + .line{margin-top:.15rem}
+.line:hover{background:var(--panel)}
+.line.rec{background:var(--rec-soft);border-left-color:var(--rec)}
+.line.unsure{border-left-color:var(--warn)}
+.line.unsure:not(.rec){background:var(--warn-soft)}
+.line.current{outline:2px solid var(--accent);outline-offset:-2px}
+.line.live{background:var(--live-soft);border-left-color:var(--live)}
+.line.cont{margin-top:0;padding-top:.25rem}
+.line.cont .who{visibility:hidden}
+.line.cont .who::before{content:'+';visibility:visible;color:var(--ink-3)}
+.line.changed .txt::after{content:" · Text geändert seit Aufnahme";font-family:var(--mono);font-size:.7rem;color:var(--warn)}
+.who{font-family:var(--mono);font-weight:700;font-size:.8rem;letter-spacing:.04em;color:var(--c);padding-top:.2rem;display:flex;flex-direction:column;gap:.15rem}
+.who b{cursor:pointer}
+.who b:hover{text-decoration:underline dotted}
+.who .note{font-weight:500;color:var(--ink-2);font-style:italic;text-transform:none;letter-spacing:0;font-family:var(--body);font-size:.85rem}
+.who .q{color:var(--warn)}
+.txt{margin:0}
+.txt.thought{font-style:italic}
+.takes{grid-column:2;display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;font-family:var(--mono);font-size:.72rem}
+.takes:empty{display:none}
+.take{display:inline-flex;align-items:center;gap:.25rem;border:1px solid var(--rule);border-radius:999px;padding:.1rem .2rem .1rem .55rem;color:var(--ink-2)}
+.take.sel{border-color:var(--rec);color:var(--rec);background:var(--panel)}
+.take button{border:0;padding:0 .3rem;font-size:.8rem;color:inherit}
+.take .x:hover{color:var(--live)}
+.rectime{color:var(--live);font-family:var(--mono);font-size:.8rem}
+.dir{margin:1.25rem 0 .75rem;font-family:var(--mono);font-size:.78rem;letter-spacing:.06em;color:var(--ink-3);text-transform:uppercase;display:flex;align-items:center;gap:.75rem}
+.dir::after{content:"";flex:1;height:1px;background:var(--rule)}
+.dir.scene{color:var(--ink-2)}
+.hint{margin-top:2rem;color:var(--ink-3);font-size:.85rem}
+
+/* aside: figures */
+.figcards{display:flex;flex-direction:column;gap:.6rem}
+.fig{border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:.7rem .8rem;display:grid;grid-template-columns:auto 1fr;gap:.2rem .7rem;border-left:4px solid var(--c);cursor:pointer}
+.fig.open{background:var(--panel)}
+.fig.speaking{box-shadow:0 0 0 2px var(--c) inset}
+.fig.open img.avatar{grid-column:1/-1;grid-row:auto;width:100%;height:auto;max-height:320px;aspect-ratio:1;border-radius:8px;margin-bottom:.3rem}
+.avatar{width:52px;height:52px;border-radius:50%;object-fit:cover;background:var(--c);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.4rem;grid-row:span 2}
+.fig h3{margin:0;font-family:var(--serif);font-size:1.15rem;line-height:1.1;color:var(--c);display:flex;align-items:center;gap:.5rem}
+.fig .sub{font-size:.8rem;color:var(--ink-2)}
+.fig .zh{font-family:var(--mono);font-size:.8rem;color:var(--ink-2);display:flex;gap:.4rem;align-items:center}
+.fig .body{grid-column:1/-1;display:none;gap:.5rem;padding-top:.4rem}
+.fig.open .body{display:grid}
+.voice{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:.6rem .8rem;display:grid;gap:.35rem}
+.voice .label{color:var(--accent)}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.2rem .6rem;font-size:.85rem}
+dt{color:var(--ink-3);white-space:nowrap}
+dd{margin:0}
+.ref{font-family:var(--serif);font-size:1rem;font-style:italic;margin:.2rem 0 0}
+.chris{font-size:.85rem;color:var(--ink-2);border-left:2px solid var(--accent);padding-left:.6rem;white-space:pre-wrap}
+.stats{font-size:.78rem;color:var(--ink-3);font-family:var(--mono)}
+.others{margin-top:1rem;display:flex;flex-wrap:wrap;gap:.3rem}
+.others button{font-family:var(--mono);font-size:.72rem;font-weight:700;border-color:var(--c);color:var(--c);padding:.2rem .5rem}
+
+
+/* toast */
+#toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:.6rem 1rem;border-radius:8px;font-size:.9rem;max-width:90vw;display:none;z-index:9}
+#toast.show{display:block}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body class="mode-static">
+<header>
+  <h1>Hörbuch-Werkstatt</h1>
+  <select id="book" aria-label="Buch"></select>
+  <div class="progress"><div class="bar"><i id="pbar"></i></div><span id="ptext">0 / 0</span></div>
+  <div class="spacer"></div>
+  <div class="tools">
+    <div class="meter" id="meter"><i></i></div>
+    <button id="recbtn" class="primary">● Aufnahme</button>
+    <span id="status"></span>
+    <button id="assemble">Kapitel zusammensetzen</button>
+    <button id="fs-" title="Kleiner">A−</button>
+    <button id="fs+" title="Grösser">A+</button>
+    <button id="theme" title="Hell/Dunkel">◐</button>
+  </div>
+</header>
+<main>
+  <nav>
+    <h2 class="label">Kapitel</h2>
+    <ul class="chapters" id="chapters"></ul>
+    <h2 class="label">Tasten</h2>
+    <div class="keys">
+      <span><kbd>↓</kbd><kbd>S</kbd> <kbd>↑</kbd><kbd>W</kbd></span><span>Absatz</span>
+      <span><kbd>Leertaste</kbd></span><span>Aufnahme start / stopp</span>
+      <span><kbd>↓</kbd> während Aufnahme</span><span>schneiden, nächster Absatz</span>
+      <span><kbd>Esc</kbd><kbd>Q</kbd></span><span>Aufnahme verwerfen, Wiedergabe stoppen</span>
+      <span><kbd>Enter</kbd><kbd>R</kbd></span><span>Take abspielen / stoppen</span>
+      <span><kbd>←</kbd><kbd>A</kbd> <kbd>→</kbd><kbd>D</kbd></span><span>Take wählen</span>
+      <span><kbd>Entf</kbd><kbd>X</kbd></span><span>Take löschen</span>
+      <span><kbd>P</kbd></span><span>ab hier durchspielen</span>
+    </div>
+  </nav>
+  <div class="gutter" id="g1" title="Ziehen: Breite · Doppelklick: ein/aus"></div>
+  <section id="script"><div class="script-inner" id="script-inner"></div></section>
+  <div class="gutter" id="g2" title="Ziehen: Breite · Doppelklick: ein/aus"></div>
+  <aside id="aside"></aside>
+</main>
+<div id="toast"></div>
+<audio id="player"></audio>
+<script src="data.js"></script>
+<script>
+(async function(){
+  const $ = s => document.querySelector(s);
+  const ls = { get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d;} }, set(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} } };
+  const PALETTE = ['#0f766e','#a3486b','#3a63a8','#b7791f','#6a4fb3','#2f7d4f','#b3423a','#4a7c8c'];
+  const state = { book:0, chap:0, cur:0, fig:null, takes:{}, live:false, server:false };
+  let DATA = [];
+
+  // ---------- data ----------
+  try {
+    const r = await fetch('/api/data', {cache:'no-store'});
+    if (r.ok) { DATA = await r.json(); state.server = true; document.body.classList.remove('mode-static'); }
+  } catch(e) {}
+  if (!DATA.length) DATA = window.HOERBUCH_DATA || [];
+  if (!DATA.length) { $('#script-inner').innerHTML = '<p class="hint">Keine Bücher. <code>python3 tools/serve.py</code> starten oder <code>python3 tools/build.py</code>.</p>'; return; }
+  $('#status').textContent = state.server ? '' : 'nur Lesen (kein Server)';
+
+  const book = () => DATA[state.book];
+  const chap = () => book().chapters[state.chap];
+  const figByName = who => book().figures.find(f=>f.name===who);
+  const figColor = f => f.color || PALETTE[book().figures.indexOf(f) % PALETTE.length];
+  const colorOf = who => { const f=figByName(who); return f ? figColor(f) : 'var(--ink-2)'; };
+  const lineIdxs = () => chap().lines.map((l,i)=>l.t==='line'?i:-1).filter(i=>i>=0);
+  const rec = i => state.takes[String(i)];
+  const selTake = i => { const r=rec(i); return r && r.selected>=0 ? r.takes[r.selected] : null; };
+  const api = (m,url,body) => fetch(url,{method:m,body}).then(r=>r.json());
+  const toast = msg => { const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),4000); };
+  const fmt = s => s>=60 ? `${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')}` : `${s.toFixed(1)}s`;
+
+  async function loadTakes(){
+    state.takes = state.server ? await api('GET',`/api/takes/${book().slug}/${chap().n}`) : {};
+  }
+  // progress per chapter for nav (server: fetch all lazily; cache)
+  const progCache = {};
+  async function chapterProgress(c){
+    if (!state.server) return {done:0};
+    const k = `${book().slug}/${c.n}`;
+    if (!(k in progCache)) { const t = await api('GET',`/api/takes/${k}`); progCache[k] = {done:Object.values(t).filter(r=>r.selected>=0).length}; }
+    return progCache[k];
+  }
+
+  // ---------- render ----------
+  function renderBooks(){
+    $('#book').innerHTML = DATA.map((b,i)=>`<option value="${i}">${b.title}${b.demo?' (Demo)':''}</option>`).join('');
+    $('#book').value = state.book;
+  }
+  async function renderChapters(){
+    const rows = await Promise.all(book().chapters.map(async (c,i)=>{
+      const total = c.lines.filter(l=>l.t==='line').length;
+      const {done} = i===state.chap ? {done:Object.values(state.takes).filter(r=>r.selected>=0).length} : await chapterProgress(c);
+      return `<li><button class="${i===state.chap?'active':''}" data-i="${i}">
+        <span class="t"><span>${c.n}. ${c.title||''}</span><span class="n">${done}/${total}</span></span>
+        <span class="bar"><i style="width:${total?done/total*100:0}%"></i></span></button></li>`;
+    }));
+    $('#chapters').innerHTML = rows.join('');
+    $('#chapters').querySelectorAll('button').forEach(b=>b.onclick=async()=>{ state.chap=+b.dataset.i; state.cur=lineIdxs()[0]||0; await loadTakes(); renderAll(); });
+  }
+  function renderScript(){
+    const c = chap();
+    const html = c.lines.map((l,i)=>{
+      if(l.t==='scene') return `<div class="dir scene">Szene · ${l.text}</div>`;
+      if(l.t==='pause') return `<div class="dir">Pause</div>`;
+      const r = rec(i), sel = selTake(i);
+      const cls = ['line', l.cont?'cont':'', sel?'rec':'', l.unsure?'unsure':'', i===state.cur?'current':'', (state.live&&i===state.cur)?'live':'', (r&&r.text&&r.text!==l.text)?'changed':''].join(' ');
+      const takes = r ? r.takes.map((t,k)=>`<span class="take ${k===r.selected?'sel':''}" data-k="${k}"><span>t${k+1} · ${fmt(t.dur)}</span><button class="play" title="abspielen">▶</button><button class="x" title="löschen">×</button></span>`).join('') : '';
+      return `<div class="${cls}" data-i="${i}" tabindex="0" style="--c:${colorOf(l.who)}">
+        <div class="who"><b data-fig="${l.who}">${l.who}${l.unsure?' <span class="q">?</span>':''}</b>${l.note?`<span class="note">${l.note}</span>`:''}</div>
+        <p class="txt ${/denkt/.test(l.note)?'thought':''}">${l.text}</p>
+        <div class="takes">${takes}${(state.live&&i===state.cur)?'<span class="rectime" id="rectime">● 0.0s</span>':''}</div>
+      </div>`;
+    }).join('');
+    $('#script-inner').innerHTML = `<div class="chap-head"><span class="label">${book().title} · ${book().dialect}</span><h2>${c.n}. ${c.title||''}</h2></div>${html}
+      <p class="hint">Grün = Take gewählt. Gelb = Sprecher unsicher. Klick auf den Namen öffnet den Steckbrief.</p>`;
+    $('#script-inner').querySelectorAll('.line').forEach(el=>{
+      el.onclick = e => {
+        const i = +el.dataset.i;
+        const tk = e.target.closest('.take');
+        if (e.target.dataset.fig) { state.fig = e.target.dataset.fig; renderAside(); return; }
+        if (tk) { const k=+tk.dataset.k; if (e.target.classList.contains('play')) playTake(i,k); else if (e.target.classList.contains('x')) delTake(i,k); else selectTake(i,k); return; }
+        setCur(i, false);
+      };
+    });
+    renderProgress();
+  }
+  function renderProgress(){
+    const total = lineIdxs().length, done = Object.values(state.takes).filter(r=>r.selected>=0).length;
+    $('#pbar').style.width = (total?done/total*100:0)+'%';
+    $('#ptext').textContent = `${done} / ${total}`;
+  }
+  function renderAside(){
+    const c = chap(), figs = book().figures;
+    const counts = {}; c.lines.forEach(l=>{ if(l.t==='line') counts[l.who]=(counts[l.who]||0)+1; });
+    const curWho = c.lines[state.cur]?.who;
+    const inChap = figs.filter(f=>counts[f.name]).sort((a,b)=>(b.name===curWho)-(a.name===curWho) || counts[b.name]-counts[a.name]);
+    const unknown = Object.keys(counts).filter(w=>!figByName(w));
+    const others = figs.filter(f=>!counts[f.name]);
+    if (!state.fig || !figByName(state.fig)) state.fig = curWho && figByName(curWho) ? curWho : (inChap[0]?.name);
+    const dl = rows => rows.length ? `<dl>${rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>` : '';
+    const card = f => {
+      const col = figColor(f);
+      const ref = f.voice.find(([k])=>/referenz/i.test(k)); const voice = f.voice.filter(r=>r!==ref);
+      const all = book().chapters.reduce((n,ch)=>n+ch.lines.filter(l=>l.t==='line'&&l.who===f.name).length,0);
+      const av = f.foto ? `<img class="avatar" src="${f.foto}" alt="">` : `<div class="avatar">${f.name[0]}</div>`;
+      return `<div class="fig ${f.name===state.fig?'open':''} ${f.name===curWho?'speaking':''}" data-fig="${f.name}" style="--c:${col}">
+        ${av}
+        <h3>${f.name}<input type="color" value="${col}" title="Farbe" data-file="${f.file}"></h3>
+        <div class="sub">${f.info.find(([k])=>/rolle/i.test(k))?.[1]||''}</div>
+        <div class="body">
+          ${f.zeichen?`<div class="zh">${f.zeichen} <button class="mini say" data-zh="${f.zeichen}">▶ Aussprache</button></div>`:''}
+          <div class="voice"><span class="label">Stimme</span>${dl(voice)}${ref?`<p class="ref">${ref[1]}</p>`:''}</div>
+          ${dl(f.info.filter(([k])=>!/rolle/i.test(k)))}
+          ${f.chris?`<div><span class="label">Chris</span><div class="chris">${f.chris}</div></div>`:''}
+          <div class="stats">${counts[f.name]||0} Zeilen hier · ${all} gesamt</div>
+        </div></div>`;
+    };
+    $('#aside').innerHTML = `<h2 class="label">In diesem Kapitel</h2><div class="figcards">${inChap.map(card).join('')}
+      ${unknown.map(w=>`<div class="fig" style="--c:var(--ink-3)"><div class="avatar">?</div><h3>${w}</h3><div class="sub">kein Steckbrief</div></div>`).join('')}</div>
+      ${others.length?`<h2 class="label" style="margin-top:1.2rem">Weitere</h2><div class="others">${others.map(f=>`<button data-fig="${f.name}" style="--c:${figColor(f)}">${f.name}</button>`).join('')}</div>`:''}`;
+    $('#aside').querySelectorAll('.fig[data-fig]').forEach(el=>el.onclick=e=>{
+      if (e.target.tagName==='INPUT') return;
+      if (e.target.classList.contains('say')) { sayZh(e.target.dataset.zh); return; }
+      state.fig = el.dataset.fig; renderAside();
+    });
+    $('#aside').querySelectorAll('.others button').forEach(b=>b.onclick=()=>{ state.fig=b.dataset.fig; toast(`${b.dataset.fig} kommt in diesem Kapitel nicht vor`); });
+    $('#aside').querySelectorAll('input[type=color]').forEach(inp=>inp.onchange=async()=>{
+      const f = figByName(inp.closest('.fig').dataset.fig); f.color = inp.value;
+      if (state.server) await fetch(`/api/color/${book().slug}/${encodeURIComponent(f.file)}`,{method:'POST',body:inp.value});
+      renderScript(); renderAside();
+    });
+  }
+  async function renderAll(){ renderBooks(); await renderChapters(); renderScript(); renderAside(); scrollCur(); }
+
+  // ---------- navigation ----------
+  function scrollCur(){ const el=document.querySelector(`.line[data-i="${state.cur}"]`); if(el) el.scrollIntoView({block:'center',behavior:'smooth'}); }
+  function setCur(i, scroll=true){ if (state.live) return; if (seq) stopSeq(); state.cur=i; const who=chap().lines[i]?.who; if (who && figByName(who)) state.fig=who; renderScript(); renderAside(); if(scroll) scrollCur(); }
+  function move(d){ const idx=lineIdxs(); let p=idx.indexOf(state.cur); if(p<0)p=0; setCur(idx[Math.max(0,Math.min(idx.length-1,p+d))]); }
+
+  // ---------- takes ----------
+  async function selectTake(i,k){ if(!state.server) return; state.takes[String(i)] = await api('POST',`/api/select/${book().slug}/${chap().n}/${i}/${k}`); delete progCache[`${book().slug}/${chap().n}`]; renderScript(); renderChapters(); }
+  async function delTake(i,k){ if(!state.server) return; if(!confirm(`Take ${k+1} löschen?`)) return; const r = await api('DELETE',`/api/take/${book().slug}/${chap().n}/${i}/${k}`); if (r.takes) state.takes[String(i)]=r; else delete state.takes[String(i)]; renderScript(); renderChapters(); }
+  function stopPlay(){ const p=$('#player'); p.onended=null; if(!p.paused){ p.pause(); p.currentTime=0; return true; } return false; }
+  function playTake(i,k){ const r=rec(i); if(!r||!r.takes[k]) return; const p=$('#player'); const src=`/audio/${book().slug}/${chap().n}/${r.takes[k].wav}`; if(!p.paused && p.src.endsWith(src)){ stopPlay(); return; } p.src=src; p.play(); }
+  // play through: selected takes from the current line onward, with the same gaps as assembly
+  let GAP = {line:0.5, cont:0.15, pause:1.5, scene:2.0};
+  if (state.server) fetch('/api/config').then(r=>r.json()).then(c=>{ if(c.gap) GAP=c.gap; }).catch(()=>{});
+  let seq = null;
+  function stopSeq(){ if (seq) { clearTimeout(seq.t); seq=null; stopPlay(); $('#status').textContent=''; } }
+  function playFrom(i){
+    stopSeq(); if (state.live) return;
+    const L = chap().lines; seq = {i, t:null};
+    const step = () => {
+      if (!seq) return;
+      while (seq.i < L.length && !(L[seq.i].t==='line' && selTake(seq.i))) {
+        if (L[seq.i].t!=='line') { const g=GAP[L[seq.i].t]; seq.i++; seq.t=setTimeout(step, g*1000); return; }
+        seq.i++;
+      }
+      if (seq.i >= L.length) { stopSeq(); return; }
+      const i = seq.i; state.cur=i; renderScript(); scrollCur(); $('#status').textContent='▶ Wiedergabe … (Esc stoppt)';
+      const p=$('#player'); p.src=`/audio/${book().slug}/${chap().n}/${selTake(i).wav}`;
+      p.onended = () => { if (!seq) return; const nxt=L[i+1]; const g = nxt && nxt.cont ? GAP.cont : GAP.line; seq.i=i+1; seq.t=setTimeout(step, g*1000); };
+      p.play();
+    };
+    step();
+  }
+  function cycleTake(d){ const r=rec(state.cur); if(!r||!r.takes.length) return; const k=(r.selected+d+r.takes.length)%r.takes.length; selectTake(state.cur,k); }
+  function sayZh(t){ const p=$('#player'); p.src=`/api/say?t=${encodeURIComponent(t)}`; p.play(); }
+
+  // ---------- recording (raw PCM via AudioWorklet -> 24-bit WAV) ----------
+  let stream, ctx, worklet, pcm=[], t0=0, timer, discard=false, analyser, cuts=[], startLine=0;
+  const WORKLET = URL.createObjectURL(new Blob([`class R extends AudioWorkletProcessor{constructor(){super();this.on=false;this.port.onmessage=e=>{this.on=e.data;};}process(i){if(this.on&&i[0]&&i[0][0]){this.port.postMessage(i[0][0].slice(0));}return true;}}registerProcessor('rec',R);`],{type:'application/javascript'}));
+  async function getMic(){
+    if (stream) return stream;
+    stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1}});
+    ctx = new AudioContext({sampleRate:48000, latencyHint:'playback'});
+    await ctx.audioWorklet.addModule(WORKLET);
+    const src = ctx.createMediaStreamSource(stream);
+    worklet = new AudioWorkletNode(ctx,'rec',{numberOfInputs:1,numberOfOutputs:0,channelCount:1});
+    worklet.port.onmessage = e => { if (state.live) pcm.push(e.data); };
+    analyser = ctx.createAnalyser(); analyser.fftSize=512;
+    src.connect(worklet); src.connect(analyser);
+    const buf = new Uint8Array(analyser.fftSize); const m=$('#meter'), bar=m.querySelector('i');
+    (function loop(){ analyser.getByteTimeDomainData(buf); let peak=0; for(const v of buf) peak=Math.max(peak,Math.abs(v-128)); const pct=Math.min(100,peak/128*100*1.4); bar.style.width=pct+'%'; m.classList.toggle('hot',pct>92); requestAnimationFrame(loop); })();
+    return stream;
+  }
+  function encodeWav(chunks, rate){
+    const n = chunks.reduce((a,c)=>a+c.length,0), bytes = 3;
+    const buf = new ArrayBuffer(44 + n*bytes), v = new DataView(buf);
+    const str = (o,s) => { for (let i=0;i<s.length;i++) v.setUint8(o+i, s.charCodeAt(i)); };
+    str(0,'RIFF'); v.setUint32(4, 36+n*bytes, true); str(8,'WAVE'); str(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+    v.setUint32(24,rate,true); v.setUint32(28,rate*bytes,true); v.setUint16(32,bytes,true); v.setUint16(34,8*bytes,true); str(36,'data'); v.setUint32(40,n*bytes,true);
+    let o = 44;
+    for (const c of chunks) for (let i=0;i<c.length;i++) { const x = Math.max(-1,Math.min(1,c[i])) * 8388607; const s = x<0 ? x+16777216 : x; v.setUint8(o,s&255); v.setUint8(o+1,(s>>8)&255); v.setUint8(o+2,(s>>16)&255); o+=3; }
+    return new Blob([buf],{type:'audio/wav'});
+  }
+  async function toggleRec(){
+    if (!state.server) { toast('Aufnahme braucht den Server: python3 tools/serve.py'); return; }
+    if (state.live) { await stopRec(); return; }
+    if (chap().lines[state.cur]?.t!=='line') return;
+    try { await getMic(); if (ctx.state!=='running') await ctx.resume(); } catch(e) { toast('Kein Mikrofon: '+e.message); return; }
+    pcm=[]; discard=false; cuts=[]; startLine=state.cur; t0=performance.now();
+    worklet.port.postMessage(true);
+    state.live=true; $('#recbtn').textContent='■ Stopp 0.0s'; $('#recbtn').classList.replace('primary','live');
+    renderScript();
+    timer = setInterval(()=>{ const s=((performance.now()-t0)/1000).toFixed(1)+'s'; $('#recbtn').textContent='■ Stopp '+s; $('#status').textContent = cuts.length ? `${cuts.length+1}. Absatz · ↓ schneidet` : '↓ = nächster Absatz ohne Stopp'; const rt=$('#rectime'); if(rt) rt.textContent='● '+s; },100);
+  }
+  async function stopRec(){
+    worklet.port.postMessage(false);
+    state.live=false; clearInterval(timer); $('#status').textContent=''; $('#recbtn').textContent='● Aufnahme'; $('#recbtn').classList.replace('live','primary');
+    if (!pcm.length || (discard && !cuts.length)) { pcm=[]; renderScript(); toast('Aufnahme verworfen'); return; }
+    const keep = discard ? cuts.length : cuts.length + 1;   // Q/Esc: drop only the paragraph in progress
+    const blob = encodeWav(pcm, ctx.sampleRate); pcm=[];
+    $('#status').textContent='speichern …';
+    const r = await fetch(`/api/take/${book().slug}/${chap().n}/${startLine}`,{method:'POST',body:blob,headers:{'X-Cuts':cuts.map(c=>c.toFixed(3)).join(','),'X-Keep':String(keep)}}).then(r=>r.json());
+    $('#status').textContent='';
+    if (r.error) { toast('Fehler: '+r.error); return; }
+    Object.assign(state.takes, r.lines); delete progCache[`${book().slug}/${chap().n}`];
+    if (cuts.length) toast(`${Object.keys(r.lines).length} Absätze aufgenommen${discard?', letzter verworfen':''}`);
+    renderScript(); renderChapters();
+  }
+  function markCut(){ const idx=lineIdxs(); const p=idx.indexOf(state.cur); if (p<0||p>=idx.length-1) { toast('Letzter Absatz'); return; } cuts.push((performance.now()-t0)/1000); state.cur=idx[p+1]; renderScript(); scrollCur(); }
+  function unmarkCut(){ if (!cuts.length) return; cuts.pop(); const idx=lineIdxs(); state.cur=idx[Math.max(0,idx.indexOf(state.cur)-1)]; renderScript(); scrollCur(); }
+  function cancelRec(){ if (state.live) { discard=true; stopRec(); } }
+
+  async function assembleChapter(){
+    if (!state.server) return;
+    $('#status').textContent='zusammensetzen …';
+    const r = await api('POST',`/api/assemble/${book().slug}/${chap().n}`);
+    $('#status').textContent='';
+    if (r.error) { toast('Fehler: '+r.error); return; }
+    toast(`Fertig: ${r.wav} (${fmt(r.duration)})${r.missing.length?` · ${r.missing.length} Absätze ohne Take`:''}. Labels für Audacity: ${r.labels}`);
+  }
+
+  // ---------- wiring ----------
+  $('#book').onchange = async e => { state.book=+e.target.value; state.chap=0; state.fig=null; await loadTakes(); state.cur=lineIdxs()[0]||0; renderAll(); };
+  $('#recbtn').onclick = toggleRec;
+  $('#assemble').onclick = assembleChapter;
+  let fs = ls.get('hb:fs', 1.05);
+  const applyFs = () => { document.documentElement.style.setProperty('--fs', fs+'rem'); ls.set('hb:fs',fs); };
+  document.getElementById('fs+').onclick=()=>{fs=Math.min(2.4,fs+.1);applyFs();}; document.getElementById('fs-').onclick=()=>{fs=Math.max(.8,fs-.1);applyFs();}; applyFs();
+  const root=document.documentElement; const th=ls.get('hb:theme',''); if(th) root.dataset.theme=th;
+  $('#theme').onclick=()=>{ const cur=root.dataset.theme || (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'); const next=cur==='dark'?'light':'dark'; root.dataset.theme=next; ls.set('hb:theme',next); };
+  // sidebar widths
+  const mainEl = document.querySelector('main');
+  const widths = ls.get('hb:widths', {nav:220, aside:340});
+  const applyW = () => { root.style.setProperty('--nav-w', widths.nav+'px'); root.style.setProperty('--aside-w', widths.aside+'px'); ls.set('hb:widths', widths); };
+  applyW();
+  const hidden = ls.get('hb:hidden', {}); mainEl.classList.toggle('no-nav', !!hidden.nav); mainEl.classList.toggle('no-aside', !!hidden.aside);
+  function gutter(el, side){
+    el.addEventListener('mousedown', e => {
+      e.preventDefault(); const x0=e.clientX, w0=widths[side]; el.classList.add('drag'); document.body.classList.add('dragging');
+      const mv = ev => { const d = ev.clientX - x0; widths[side] = Math.max(120, Math.min(700, side==='nav' ? w0+d : w0-d)); applyW(); };
+      const up = () => { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); el.classList.remove('drag'); document.body.classList.remove('dragging'); };
+      document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up);
+    });
+    el.addEventListener('dblclick', () => { hidden[side] = !hidden[side]; mainEl.classList.toggle('no-'+side, !!hidden[side]); ls.set('hb:hidden', hidden); });
+  }
+  gutter($('#g1'),'nav'); gutter($('#g2'),'aside');
+  document.addEventListener('keydown',e=>{
+    if (e.target.matches('input,select,textarea')) return;
+    const k=e.key;
+    if (k===' ') { e.preventDefault(); toggleRec(); }
+    else if (k==='Escape'||k==='q'||k==='Q') { if (state.live) cancelRec(); else if (seq) stopSeq(); else stopPlay(); }
+    else if (k==='p'||k==='P') { if (seq) stopSeq(); else playFrom(state.cur); }
+    else if (k==='ArrowDown'||k==='s'||k==='S'||k==='j') { e.preventDefault(); state.live ? markCut() : move(1); }
+    else if (k==='ArrowUp'||k==='w'||k==='W'||k==='k') { e.preventDefault(); state.live ? unmarkCut() : move(-1); }
+    else if (k==='ArrowRight'||k==='d'||k==='D') { e.preventDefault(); cycleTake(1); }
+    else if (k==='ArrowLeft'||k==='a'||k==='A') { e.preventDefault(); cycleTake(-1); }
+    else if (k==='Enter'||k==='r'||k==='R') { const r=rec(state.cur); if(r) playTake(state.cur,r.selected); }
+    else if (k==='Delete'||k==='Backspace'||k==='x'||k==='X') { const r=rec(state.cur); if(r&&r.selected>=0) delTake(state.cur,r.selected); }
+  });
+
+  // restore position
+  const pos = ls.get('hb:pos', null);
+  if (pos) { const bi = DATA.findIndex(b=>b.slug===pos.slug); if (bi>=0) { state.book=bi; state.chap=Math.min(pos.chap, DATA[bi].chapters.length-1); state.cur=pos.cur; } }
+  window.addEventListener('beforeunload',()=>ls.set('hb:pos',{slug:book().slug,chap:state.chap,cur:state.cur}));
+  await loadTakes();
+  if (!lineIdxs().includes(state.cur)) state.cur = lineIdxs()[0]||0;
+  renderAll();
+})();
+</script>
+</body>
+</html>

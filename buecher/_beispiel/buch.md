@@ -1,0 +1,5 @@
+- Titel: Meridian
+- Autor: fiktiv (Demo)
+- Dialekt: Züridütsch
+- Quelle: –
+- Status: Kapitel 1 übersetzt

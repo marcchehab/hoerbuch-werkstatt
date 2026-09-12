@@ -1,0 +1,16 @@
+# Book text is copyrighted and never committed: originals, translated scripts, style sample, recordings.
+# Character sheets, photos, glossary and name tables are fine.
+buecher/*/original/*
+!buecher/*/original/.gitkeep
+buecher/*/skript/
+buecher/*/audio/
+buecher/*/stil/beispiel.md
+# the fictional demo book and the template are fully tracked
+!buecher/_beispiel/skript/
+!buecher/_beispiel/stil/beispiel.md
+!buecher/_vorlage/stil/beispiel.md
+buecher/.cache/
+# generated
+app/data.js
+*.tmp.wav
+__pycache__/

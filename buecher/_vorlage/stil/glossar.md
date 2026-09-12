@@ -1,0 +1,5 @@
+# Glossar
+
+| Original | Dialekt | Bemerkung |
+|---|---|---|
+| | | |
