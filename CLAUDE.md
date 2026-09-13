@@ -33,7 +33,7 @@ HALDE (ironisch, ?): …
 [PAUSE]
 ```
 
-- Erste Zeile: `## Kapitel N – Titel` (Titel übersetzt).
+- Erste Zeile: `## Kapitel N – Titel` (Titel übersetzt). Danach als erste Sprechzeile `ERZÄHLER: Kapitel N: Titel` und `[PAUSE]`, damit der Titel mit aufgenommen wird.
 - `NAME: Text` – ein Absatz pro Zeile, Leerzeile zwischen allen Zeilen (Markdown-Absätze). NAME in Grossbuchstaben, wie in `figuren/`.
 - `ERZÄHLER` für alles, was keine direkte Rede ist. Auch Erzählung ist Dialekt.
 - `(Regieanweisung)` optional nach dem Namen: Tonfall, Lautstärke, Tempo. Kurz, Dialekt.
@@ -41,7 +41,7 @@ HALDE (ironisch, ?): …
 - `(?)` wenn der Sprecher im Original nicht eindeutig ist. Beste Vermutung als NAME, Chris entscheidet.
 - `[SZENE: …]` bei Ortswechsel, `[PAUSE]` bei Abschnittswechsel.
 - Gedanken einer Figur: `NAME (denkt): …`.
-- Inquit-Formeln («sagte er leise») werden zur Regieanweisung, nicht mitgesprochen, ausser sie tragen Information.
+- **Nichts weglassen.** Inquit-Formeln («sagte er leise»), Handlungen und Erzählsätze im gleichen Absatz wie direkte Rede werden vollständig übersetzt und bleiben im Text. Der ganze Originalabsatz gehört der Figur, auch Erzählsätze davor oder danach, nie als eigene ERZÄHLER-Zeile abgetrennt (`NAME: «Rede», hät er gseit. «Rede.»`); die direkte Rede steht dann in «», der Rest ist Erzählerteil (Chris spricht ihn als Erzähler). In solchen Absätzen hat jede Zeile, auch jede `+`-Zeile, eigene, geschlossene «». Reine Rede ohne Erzählteil braucht keine «». Tonfall zusätzlich als Regieanweisung ist ok.
 
 ## Steckbrief (`figuren/NAME.md`)
 

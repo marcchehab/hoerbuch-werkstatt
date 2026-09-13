@@ -13,6 +13,7 @@ API
                                                   X-Keep: n keeps only the first n segments
   POST /api/select/<book>/<chapter-n>/<line>/<k>  select take k (-1 = none)
   DELETE /api/take/<book>/<chapter-n>/<line>/<k>  delete take k
+  DELETE /api/chapter/<book>/<chapter-n>          delete all takes, raw recordings and assembled files of a chapter
   POST /api/assemble/<book>/<chapter-n>           concat selected takes -> wav + Audacity labels
   POST /api/color/<book>/<figure-file>            body = #rrggbb, writes "- Farbe:" into the Steckbrief
   GET  /api/say?t=<chinese>                       mp3 via edge-tts (cached)
@@ -311,6 +312,13 @@ class H(SimpleHTTPRequestHandler):
 
     def do_DELETE(self):
         parts = self.path.strip("/").split("/")
+        if parts[:2] == ["api", "chapter"] and len(parts) == 4:
+            d = chapter_dir(parts[2], parts[3])
+            n = 0
+            for f in d.iterdir():
+                if f.suffix in (".wav", ".webm", ".ogg", ".txt", ".json"):
+                    f.unlink(); n += 1
+            return self.send_json({"deleted": n})
         if parts[:2] == ["api", "take"] and len(parts) == 6:
             d = chapter_dir(parts[2], parts[3])
             takes = load_takes(d)

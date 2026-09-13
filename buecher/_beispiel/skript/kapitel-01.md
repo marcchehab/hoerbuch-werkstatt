@@ -1,5 +1,9 @@
 ## Kapitel 1 – Dr letscht Orbit
 
+ERZÄHLER: Kapitel 1: Dr letscht Orbit
+
+[PAUSE]
+
 [SZENE: Brügg vo dr Meridian, Nachtschicht]
 
 ERZÄHLER: Dr Lärm vo de Triebwärk isch sit Tag s Einzige gsi, wo dr Kai no ghört hät. Er hät scho lang ufghört, uf d Uhr z luege.

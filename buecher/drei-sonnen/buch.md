@@ -2,4 +2,4 @@
 - Autor: Liu Cixin (dt. Martina Hasse)
 - Dialekt: Züridütsch
 - Quelle: original/die-drei-sonnen.epub
-- Status: Kapitel 1–3 übersetzt (Entwurf, ohne Chris' Stilbeispiel)
+- Status: Kapitel 1–35 + Nachwort übersetzt (Entwurf). Direkte Reden vollständig mit Inquits (13.9.2026).

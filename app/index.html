@@ -51,7 +51,8 @@ header h1{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:0;let
 .meter.hot i{background:var(--live)}
 #recbtn{min-width:8.5rem;font-variant-numeric:tabular-nums}
 #status{font-size:.85rem;color:var(--ink-2);min-width:8rem}
-.mode-static #recbtn,.mode-static #assemble,.mode-static .meter{display:none}
+.mode-static #recbtn,.mode-static #assemble,.mode-static #clear,.mode-static .meter{display:none}
+#clear:hover{border-color:var(--live);color:var(--live)}
 
 /* layout */
 :root{--nav-w:220px;--aside-w:340px}
@@ -161,6 +162,7 @@ dd{margin:0}
     <button id="recbtn" class="primary">● Aufnahme</button>
     <span id="status"></span>
     <button id="assemble">Kapitel zusammensetzen</button>
+    <button id="clear" title="Alle Aufnahmen dieses Kapitels löschen">Kapitel leeren</button>
     <button id="fs-" title="Kleiner">A−</button>
     <button id="fs+" title="Grösser">A+</button>
     <button id="theme" title="Hell/Dunkel">◐</button>
@@ -426,6 +428,16 @@ dd{margin:0}
   $('#book').onchange = async e => { state.book=+e.target.value; state.chap=0; state.fig=null; await loadTakes(); state.cur=lineIdxs()[0]||0; renderAll(); };
   $('#recbtn').onclick = toggleRec;
   $('#assemble').onclick = assembleChapter;
+  $('#clear').onclick = async () => {
+    const n = Object.values(state.takes).reduce((a,r)=>a+r.takes.length,0);
+    if (!n) { toast('Keine Aufnahmen in diesem Kapitel'); return; }
+    const c = chap();
+    if (!confirm(`ACHTUNG: Alle ${n} Takes von Kapitel ${c.n} «${c.title}» löschen?\n\nAuch die Rohaufnahmen und die zusammengesetzte Datei. Das kann nicht rückgängig gemacht werden.`)) return;
+    if (prompt('Zur Bestätigung «löschen» eintippen:') !== 'löschen') { toast('Abgebrochen'); return; }
+    const r = await api('DELETE', `/api/chapter/${book().slug}/${c.n}`);
+    state.takes = {}; delete progCache[`${book().slug}/${c.n}`];
+    renderScript(); renderChapters(); toast(`${r.deleted} Dateien gelöscht`);
+  };
   let fs = ls.get('hb:fs', 1.05);
   const applyFs = () => { document.documentElement.style.setProperty('--fs', fs+'rem'); ls.set('hb:fs',fs); };
   document.getElementById('fs+').onclick=()=>{fs=Math.min(2.4,fs+.1);applyFs();}; document.getElementById('fs-').onclick=()=>{fs=Math.max(.8,fs-.1);applyFs();}; applyFs();
